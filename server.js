@@ -49,9 +49,8 @@ app.post("/", (req, res) => {
                     data = data.toString().trim().replace("{{user}}", req.session.user.nombre);
                     res.send(data);
                 })
-
             } else {
-                fs.readFile("./public/view/login.html", (err, data) => {
+                fs.readFile("./public/views/login.html", (err, data) => {
                     data = data.toString().trim().replace("##nombre##", "Login de Página").replace("##err##", "Usuario o contraseña incorrecto");
                     res.send(data);
                     return;
@@ -60,6 +59,10 @@ app.post("/", (req, res) => {
         }
         conexion.con.end();
     });
+})
+app.get("/desconectar",(req,res)=>{
+    req.session.destroy();
+    res.redirect("/");
 })
 
 
@@ -112,7 +115,12 @@ io.on('connection', (socket) => {
         console.log(reason);
         let mensaje = socket.request.session.user.nombre + ":" + reason
         let usuario = socket.request.session.user.nombre;
-        //usuarioOnline.splice(usuarioOnline.findIndex(usuario),1)
+        for(let i = 0; i < usuarioOnline.length; i++){
+            if(usuarioOnline[i]==usuario){
+                usuarioOnline.splice(i,1);
+            }
+        }
+        io.emit("usuarios", JSON.stringify(usuarioOnline));
         io.emit("chat", mensaje);
 
     });

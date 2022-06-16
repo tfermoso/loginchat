@@ -7,10 +7,12 @@ window.onload = () => {
 
     var form = document.getElementById('form');
     var input = document.getElementById('input');
+   /*
     var desconectar = document.getElementById("desconectar");
     desconectar.onclick = function salir() {
         socket.disconnect();
     }
+    */
     form.addEventListener('submit', function (e) {
         e.preventDefault();
         if (input.value) {
