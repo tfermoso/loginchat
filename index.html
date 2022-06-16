@@ -58,19 +58,42 @@
         #messages>li:nth-child(odd) {
             background: #efefef;
         }
+
+        .pagina{
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .chat{
+            width: 30%;
+        }
+        .messages{
+            width: 70%;
+        }
     </style>
 </head>
 
 <body>
+
     <script src="/socket.io/socket.io.js"></script>
     <script src="js/index.js"></script>
-    <ul id="messages">
+    <button id="desconectar">Desconectar</button>
+    <img src="" id="imagen" alt="">
+    <div class="pagina">
+        
+        <ul id="messages">
 
-    </ul>
-    <ul id="usuarios"></ul>
-    <form id="form" action="">
-        <label for="">{{user}}:</label><input id="input" autocomplete="off" /><button>Send</button>
-    </form>
+        </ul>
+        <div class="chat">
+            <h4>Usuarios Online</h4>
+            <ul id="usuarios"></ul>
+            <form id="form" action="">
+                <label id="usuario" for="">{{user}}</label><input id="input" autocomplete="off" /><button>Send</button>
+            </form>
+        </div>
+    </div>
+
+
 
 </body>
 

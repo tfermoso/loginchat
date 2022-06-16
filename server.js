@@ -10,7 +10,8 @@ const server = http.createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(server);
 
-var usuarioOnline=[];
+var usuarioOnline = [];
+var users = {};
 const sessionMiddleware = session({
     secret: '5577-4D44-WppQ38S',
     resave: true,
@@ -25,7 +26,7 @@ app.use(bodyparser.urlencoded({ extended: true }));
 app.use('/', express.static(__dirname + '/public'));
 
 app.get('/', function (req, res) {
-    res.sendFile(__dirname+"/public/views/login.html");
+    res.sendFile(__dirname + "/public/views/login.html");
 })
 
 app.post("/", (req, res) => {
@@ -44,8 +45,8 @@ app.post("/", (req, res) => {
             if (results.length > 0) {
                 req.session.user = results[0];
                 usuarioOnline.push(req.session.user.nombre);
-                fs.readFile(__dirname+"/index.html", (err, data) => {
-                    data = data.toString().trim().replace("{{user}}",req.session.user.nombre);
+                fs.readFile(__dirname + "/index.html", (err, data) => {
+                    data = data.toString().trim().replace("{{user}}", req.session.user.nombre);
                     res.send(data);
                 })
 
@@ -69,32 +70,69 @@ io.use(wrap(sessionMiddleware));
 
 // only allow authenticated users
 io.use((socket, next) => {
-  const session = socket.request.session;
-  if (session && session.user) {
-    next();
-  } else {
-    next(new Error("unauthorized"));
-  }
+    const session = socket.request.session;
+    if (session && session.user) {
+        next();
+    } else {
+        next(new Error("unauthorized"));
+    }
 });
 
 io.on('connection', (socket) => {
+
     io.emit("usuarios", JSON.stringify(usuarioOnline));
     //socket.broadcast.emit("chat","nuevo usuario desde io")
-    console.log('a user connected');
-    
+    console.log(socket.request.session.user.nombre + ' connected ');
+    let user = socket.request.session.user.nombre;
+
+    users[user] = socket.id;
+    console.log(users);
     socket.on('chat', (msg) => {
-        let mensaje=socket.request.session.user.nombre+":"+msg;
+        let mensaje = socket.request.session.user.nombre + ":" + msg;
         io.emit('chat', mensaje);
     });
 
-/*
-    contador=0;
-    setInterval(()=>{
-        contador++;
-        io.emit("chat","Nuevo mensaje "+contador)
-    },5000)
-    */
+    /*Private chat*/
+    socket.on('private_chat', function (data) {
+        const to = data.to,
+            message = data.message;
+
+        if (users.hasOwnProperty(to)) {
+            io.to(users[to]).emit('private_chat', {
+                //The sender's username
+                username: socket.request.session.user.nombre,
+                //Message sent to receiver
+                message: message
+            });
+        }
+
+    });
+
+    socket.on("disconnect", (reason) => {
+        console.log(reason);
+        let mensaje = socket.request.session.user.nombre + ":" + reason
+        let usuario = socket.request.session.user.nombre;
+        //usuarioOnline.splice(usuarioOnline.findIndex(usuario),1)
+        io.emit("chat", mensaje);
+
+    });
+
+    /*
+        contador=0;
+        setInterval(()=>{
+            let datos=base64_encode(__dirname+"/public/img/5.jpg");
+            io.emit("Juan","hola juan")
+            console.log("hola Juan");
+        },3000)
+        */
+
+
 });
 
+function base64_encode(file) {
+    return "data:image/jpg;base64," + fs.readFileSync(file, 'base64');
+}
 
-server.listen(3500);
+server.listen(3500, (err) => {
+    console.log("Servidor iniciado en 3500");
+});
