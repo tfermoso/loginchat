@@ -28,6 +28,9 @@ app.use('/', express.static(__dirname + '/public'));
 app.get('/', function (req, res) {
     res.sendFile(__dirname + "/public/views/login.html");
 })
+app.get('/chat', function (req, res) {
+    res.sendFile(__dirname + "/index2.html");
+})
 
 app.post("/", (req, res) => {
     let conexion = new Conexion();
@@ -45,7 +48,7 @@ app.post("/", (req, res) => {
             if (results.length > 0) {
                 req.session.user = results[0];
                 usuarioOnline.push(req.session.user.nombre);
-                fs.readFile(__dirname + "/index.html", (err, data) => {
+                fs.readFile(__dirname + "/index2.html", (err, data) => {
                     data = data.toString().trim().replace("{{user}}", req.session.user.nombre);
                     res.send(data);
                 })
