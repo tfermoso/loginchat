@@ -354,6 +354,7 @@ body {
   padding: 3px 20px !important;
   margin-left: 40% !important;
   max-width: 60%;
+
 }
 
 .message-text {
@@ -395,6 +396,7 @@ body {
   text-shadow: 0 1px 1px rgba(0, 0, 0, .2);
   display: inline-block;
   word-wrap: break-word;
+  text-align: right;
 }
 
 

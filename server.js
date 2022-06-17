@@ -8,6 +8,7 @@ const app = express();
 const http = require('http');
 const server = http.createServer(app);
 const { Server } = require("socket.io");
+const { isModuleNamespaceObject } = require('util/types');
 const io = new Server(server);
 
 var usuarioOnline = [];
@@ -47,9 +48,9 @@ app.post("/", (req, res) => {
         } else {
             if (results.length > 0) {
                 req.session.user = results[0];
-                usuarioOnline.push(req.session.user.nombre);
+                usuarioOnline.push({nombre:req.session.user.nombre,imagen:req.session.user.imagen});
                 fs.readFile(__dirname + "/index2.html", (err, data) => {
-                    data = data.toString().trim().replace("{{user}}", req.session.user.nombre);
+                    data = data.toString().trim().replace("{{user}}", req.session.user.nombre).replace("{{img}}",`img/${req.session.user.imagen==null?'default':req.session.user.imagen}.jpg`);
                     res.send(data);
                 })
             } else {
@@ -86,7 +87,7 @@ io.use((socket, next) => {
 
 io.on('connection', (socket) => {
 
-    io.emit("usuarios", JSON.stringify(usuarioOnline));
+    io.emit("usuarios", usuarioOnline);
     //socket.broadcast.emit("chat","nuevo usuario desde io")
     console.log(socket.request.session.user.nombre + ' connected ');
     let user = socket.request.session.user.nombre;
@@ -94,8 +95,8 @@ io.on('connection', (socket) => {
     users[user] = socket.id;
     console.log(users);
     socket.on('chat', (msg) => {
-        let mensaje = socket.request.session.user.nombre + ":" + msg;
-        io.emit('chat', mensaje);
+        //let mensaje = socket.request.session.user.nombre + ":" + msg;
+        io.emit('chat', msg);
     });
 
     /*Private chat*/
@@ -119,12 +120,12 @@ io.on('connection', (socket) => {
         let mensaje = socket.request.session.user.nombre + ":" + reason
         let usuario = socket.request.session.user.nombre;
         for(let i = 0; i < usuarioOnline.length; i++){
-            if(usuarioOnline[i]==usuario){
+            if(usuarioOnline[i].nombre==usuario){
                 usuarioOnline.splice(i,1);
             }
         }
-        io.emit("usuarios", JSON.stringify(usuarioOnline));
-        io.emit("chat", mensaje);
+        io.emit("usuarios", usuarioOnline);
+        io.emit("chat", {from:usuario,message:reason});
 
     });
 

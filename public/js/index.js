@@ -1,5 +1,5 @@
 var emojis = { ":-)": "0x1F600", ":-|": "0x1F604" };
-const template_usuario=`<div class="row sideBar-body classUser">
+const template_usuario = `<div class="row sideBar-body classUser">
 <div class="col-sm-3 col-xs-3 sideBar-avatar">
   <div class="avatar-icon">
     <img src="{{img}}">
@@ -18,14 +18,18 @@ const template_usuario=`<div class="row sideBar-body classUser">
   </div>
 </div>
 </div>`;
-const template_msg=`<div class="row message-body">
+const template_msg = `<div class="row message-body">
 <div class="col-sm-12 message-main-{{origen}}">
+    
     <div class="{{origen}}">
+        <div class="avatar-icon">
+            <img src="{{img}}">
+        </div>
         <div class="message-text">
             {{msg}}
         </div>
         <span class="message-time pull-right">
-            {{dia}}
+            {{hora}}
         </span>
     </div>
 </div>
@@ -38,22 +42,32 @@ window.onload = () => {
 
     var form = document.getElementById('form');
     var input = document.getElementById('input');
-   /*
-    var desconectar = document.getElementById("desconectar");
-    desconectar.onclick = function salir() {
-        socket.disconnect();
-    }
-    */
+    /*
+     var desconectar = document.getElementById("desconectar");
+     desconectar.onclick = function salir() {
+         socket.disconnect();
+     }
+     */
     form.addEventListener('submit', function (e) {
         e.preventDefault();
         if (input.value) {
-            socket.emit('chat', input.value);
+            socket.emit('chat', { from: usuario, message: input.value, imagen: $("#imgAvatar").attr("src") });
             input.value = '';
         }
     });
     socket.on('chat', function (msg) {
-        document.getElementById("conversation").innerHTML+=template_msg.replace("{{msg}}",msg).replaceAll("{{origen}}","receiver");
-        window.scrollTo(0, document.body.scrollHeight);
+        let mensaje = msg.message;
+        let sender = '';
+        if (msg.from == usuario) {
+            sender = 'sender';
+        } else {
+            sender = 'receiver';
+        }
+
+        let date = new Date();
+        let hora = String(date.getHours()).padStart(2, "0") + ":" + String(date.getMinutes()).padStart(2, "0") + ":" + String(date.getSeconds()).padStart(2, "0");
+        document.getElementById("conversation").innerHTML += template_msg.replace("{{msg}}", mensaje).replaceAll("{{origen}}", sender).replace("{{hora}}", hora).replace("{{img}}",msg.imagen);
+        document.getElementById("conversation").scrollTo(0, document.getElementById("conversation").scrollHeight);
     });
 
     socket.on(usuario, (msg) => {
@@ -62,8 +76,9 @@ window.onload = () => {
     socket.on('usuarios', function (users) {
 
         let liUsuarios = "";
-        for (const user of JSON.parse(users)) {
-            liUsuarios += template_usuario.replace("{{user}}",user).replace("{{hora_conexion}}","18:00").replace("{{img}}","img/4.jpg");
+        for (const user of users) {
+            if (user.nombre != usuario)
+                liUsuarios += template_usuario.replace("{{user}}", user.nombre).replace("{{hora_conexion}}", "18:00").replace("{{img}}", `img/${user.imagen == null ? 'default' : user.imagen}.jpg`);
         }
         document.getElementById("usuarios").innerHTML = liUsuarios;
         let lis = document.getElementsByClassName("classUser");
