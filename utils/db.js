@@ -1,11 +1,12 @@
 const mysql = require('mysql');
 class Conexion {
     constructor() {
+
         this.con = mysql.createConnection({
-            host: "localhost",
-            user: "root",
-            database:"pedidos",
-            password: ""
+            host: "https://databases.000webhost.com/",
+            user: "id18920129_admin_loginchat",
+            database:"id18920129_loginchat",
+            password: "}q5W?$pof&#%O>C#"
         });
 
         this.con.connect(function (err) {
