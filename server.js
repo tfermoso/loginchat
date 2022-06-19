@@ -145,6 +145,7 @@ function base64_encode(file) {
     return "data:image/jpg;base64," + fs.readFileSync(file, 'base64');
 }
 
-server.listen(3500, (err) => {
-    console.log("Servidor iniciado en 3500");
+const PORT= process.env.PORT || 3000;
+server.listen(PORT, (err) => {
+    console.log(`Servidor iniciado en ${PORT}`);
 });
