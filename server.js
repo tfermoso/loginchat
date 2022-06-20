@@ -37,7 +37,7 @@ app.post("/", (req, res) => {
     let conexion = new Conexion();
     let pass = crypto.createHash('md5').update(req.body.password).digest("hex")
 
-    let consulta = "select * from cliente where username=? and password=?";
+    let consulta = "select * from usuarios where username=$1 and password=$2";
     conexion.con.query(consulta, [req.body.username, pass], (error, results, fields) => {
         if (error) {
             fs.readFile("./public/views/login.html", (err, data) => {
@@ -46,8 +46,8 @@ app.post("/", (req, res) => {
                 return;
             })
         } else {
-            if (results.length > 0) {
-                req.session.user = results[0];
+            if (results.rowCount > 0) {
+                req.session.user = results.rows[0];
                 usuarioOnline.push({nombre:req.session.user.nombre,imagen:req.session.user.imagen});
                 fs.readFile(__dirname + "/index2.html", (err, data) => {
                     data = data.toString().trim().replace("{{user}}", req.session.user.nombre).replace("{{img}}",`img/${req.session.user.imagen==null?'default':req.session.user.imagen}.jpg`);
@@ -148,4 +148,15 @@ function base64_encode(file) {
 const PORT= process.env.PORT || 3000;
 server.listen(PORT, (err) => {
     console.log(`Servidor iniciado en ${PORT}`);
+/*
+    let conexion=new Conexion();
+    conexion.con.query('SELECT * FROM usuarios', (err, res) => {
+        if (err) throw err;
+        for (let row of res.rows) {
+          console.log(JSON.stringify(row));
+        }
+        conexion.con.end();
+      });
+      */
+
 });
