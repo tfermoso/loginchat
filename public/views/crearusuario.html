@@ -29,24 +29,35 @@
         <div class="container">
             <div class="row">
                 <div class="col-md-4 login-sec">
-                    <h2 class="text-center">Login</h2>
-                    <form class="login-form" action="" method="post">
+                    <h2 class="text-center">New User</h2>
+                    <form class="login-form" method="post" enctype="multipart/form-data">
                         <div class="form-group">
-                            <label for="username" class="text-uppercase">Username</label>
-                            <input type="text" name="username"  class="form-control" placeholder="">
-
+                            <label for="usuario" class="text-uppercase">Username</label>
+                            <input required type="text" name="username" class="form-control" placeholder="">
+                        </div>
+                        <div class="form-group">
+                            <label for="nombre" class="text-uppercase">Nombre</label>
+                            <input required type="text" name="nombre" class="form-control" placeholder="">
                         </div>
                         <div class="form-group">
                             <label for="exampleInputPassword1" class="text-uppercase">Password</label>
-                            <input type="password" name="password" class="form-control" placeholder="">
+                            <input required type="password" name="password" class="form-control" placeholder="">
                         </div>
                         <div class="form-group">
-                            <button id="btnlogin" type="submit" class="btn btn-primary btn-lg btn-block">Submit</button>
+                            <label for="file" class="text-uppercase">Imagen</label>
+                            <input  type="file" name="file" class="form-control" placeholder="">
+                        </div>
+                        <div class="form-group">
+                            <button id="btnlogin" type="submit" class="btn btn-primary btn-lg btn-block">New
+                                User</button>
                         </div>
 
-
+                        <div class="form-group">
+                            <label for="">{{err}}</label>    
+                        </div>
                     </form>
-                    <label for="">Si no tienes usuario, </label><a href="crearcuenta">Crear cuenta</a>
+
+                    <label for="">Si ya tienes usuario, </label><a href="/">Login</a>
                     <div class="copy-text">Created with <i class="fa fa-heart"></i> by tfermoso</div>
                 </div>
                 <div class="col-md-8 banner-sec d-none d-sm-none d-md-block">

@@ -1,5 +1,6 @@
 var emojis = { ":-)": "0x1F600", ":-|": "0x1F604" };
-const template_usuario = `<div class="row sideBar-body classUser">
+var mediaRecorder;
+const template_usuario = `<div class="row sideBar-body classUser" id="id_{{user}}">
 <div class="col-sm-3 col-xs-3 sideBar-avatar">
   <div class="avatar-icon">
     <img src="{{img}}">
@@ -23,7 +24,7 @@ const template_msg = `<div class="row message-body">
     
     <div class="{{origen}}">
         <div class="avatar-icon">
-            <img src="{{img}}">
+            <img src="{{img}}"><span class="user-msg">{{user}}</span>
         </div>
         <div class="message-text">
             {{msg}}
@@ -36,18 +37,43 @@ const template_msg = `<div class="row message-body">
 </div>`;
 
 window.onload = () => {
+
+    var constraints = { audio: true };
+   
+    
+    $("#microphone").click(()=>{
+          // Start recording
+          mediaRecorder.start();
+    
+          // Stop recording after 5 seconds and broadcast it to server
+          setTimeout(function() {
+              mediaRecorder.stop()
+          }, 5000);
+    })
+    
+
+
     let usuario = document.getElementById("usuario").innerText;
     let emojis = { ":-)": "0x1F600", ":-|": "0x1F604" };
     var socket = io();
 
     var form = document.getElementById('form');
     var input = document.getElementById('input');
-    /*
-     var desconectar = document.getElementById("desconectar");
-     desconectar.onclick = function salir() {
-         socket.disconnect();
-     }
-     */
+    var textSearch=document.getElementById('searchText');
+
+    textSearch.onkeyup=()=>{
+        let usuarios=$('.classUser');
+        for (let index = 0; index < usuarios.length; index++) {
+            let u=usuarios[index];
+            if(u.id.toLowerCase().indexOf(textSearch.value.toLowerCase())<0){
+                $(u).hide();
+            }else{
+                $(u).show();
+            }
+            
+        }
+    }
+   
     form.addEventListener('submit', function (e) {
         e.preventDefault();
         if (input.value) {
@@ -66,26 +92,32 @@ window.onload = () => {
 
         let date = new Date();
         let hora = String(date.getHours()).padStart(2, "0") + ":" + String(date.getMinutes()).padStart(2, "0") + ":" + String(date.getSeconds()).padStart(2, "0");
-        document.getElementById("conversation").innerHTML += template_msg.replace("{{msg}}", mensaje).replaceAll("{{origen}}", sender).replace("{{hora}}", hora).replace("{{img}}",msg.imagen);
+        document.getElementById("conversation").innerHTML += template_msg.replace("{{msg}}", mensaje).replaceAll("{{origen}}", sender).replace("{{hora}}", hora).replace("{{img}}",msg.imagen).replace("{{user}}",msg.from);
         document.getElementById("conversation").scrollTo(0, document.getElementById("conversation").scrollHeight);
     });
 
-    socket.on(usuario, (msg) => {
-        alert(msg);
-    })
+    // When the client receives a voice message it will play the sound
+    socket.on('radio', function(arrayBuffer) {
+        console.log("reproduciendo audio")
+        var blob = new Blob([arrayBuffer], { 'type' : 'audio/ogg; codecs=opus' });
+        var audio = document.createElement('audio');
+        audio.src = window.URL.createObjectURL(blob);
+        audio.play();
+    });
+
     socket.on('usuarios', function (users) {
 
         let liUsuarios = "";
         for (const user of users) {
             if (user.nombre != usuario)
-                liUsuarios += template_usuario.replace("{{user}}", user.nombre).replace("{{hora_conexion}}", "18:00").replace("{{img}}", `img/${user.imagen == null ? 'default' : user.imagen}.jpg`);
+                liUsuarios += template_usuario.replaceAll("{{user}}", user.nombre).replace("{{hora_conexion}}", user.hora_conexion).replace("{{img}}", `img/${user.imagen == null ? 'default.jpg' : user.imagen}`);
         }
         document.getElementById("usuarios").innerHTML = liUsuarios;
         let lis = document.getElementsByClassName("classUser");
         for (let index = 0; index < lis.length; index++) {
             const element = lis[index];
             element.onclick = (e) => {
-                usuarioTo = e.currentTarget.innerText;
+                usuarioTo = e.currentTarget.getElementsByClassName("name-meta")[0].innerText;
                 message = prompt("type your message to " + usuarioTo);
                 socket.emit('private_chat', {
                     to: usuarioTo,
@@ -117,4 +149,21 @@ window.onload = () => {
             }
         }
     }
+
+    navigator.mediaDevices.getUserMedia(constraints).then(function(mediaStream) {
+        mediaRecorder = new MediaRecorder(mediaStream);
+        mediaRecorder.onstart = function(e) {
+            this.chunks = [];
+        };
+        mediaRecorder.ondataavailable = function(e) {
+            this.chunks.push(e.data);
+        };
+        mediaRecorder.onstop = function(e) {
+            var blob = new Blob(this.chunks, { 'type' : 'audio/ogg; codecs=opus' });
+            socket.emit('radio', blob);
+            console.log("Enviando audio")
+        };
+    
+      
+    });
 }
